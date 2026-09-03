@@ -531,9 +531,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
       // Suitability Feature Popup
       const catColor = SUITABILITY_COLORS[p.category as keyof typeof SUITABILITY_COLORS]?.fill || '#64748B';
-      const constraintList = p.constraintReasons
-        ? JSON.parse(p.constraintReasons)
-        : [];
+      let constraintList: string[] = [];
+      if (Array.isArray(p.constraintReasons)) {
+        constraintList = p.constraintReasons;
+      } else if (typeof p.constraintReasons === 'string' && p.constraintReasons.trim()) {
+        try {
+          const parsed = JSON.parse(p.constraintReasons);
+          constraintList = Array.isArray(parsed) ? parsed : [String(parsed)];
+        } catch {
+          constraintList = [p.constraintReasons];
+        }
+      }
 
       const html = `
         <div class="p-3 space-y-2.5 text-xs text-slate-800 max-w-xs font-sans">
