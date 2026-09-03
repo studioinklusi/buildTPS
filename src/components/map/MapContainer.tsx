@@ -134,6 +134,12 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       if (!map.getSource('src-kecamatan')) {
         map.addSource('src-kecamatan', { type: 'geojson', data: '/data/administrasi_kecamatan.geojson' });
       }
+      if (!map.getSource('src-longsor')) {
+        map.addSource('src-longsor', { type: 'geojson', data: '/data/kelas_longsor.geojson' });
+      }
+      if (!map.getSource('src-banjir')) {
+        map.addSource('src-banjir', { type: 'geojson', data: '/data/kelas_banjir.geojson' });
+      }
 
       // 2. Dynamic Sources (Initialize with current or empty GeoJSON)
       if (!map.getSource('src-service-gap')) {
@@ -175,8 +181,57 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           id: 'layer-slope-fill',
           type: 'fill',
           source: 'src-slope',
+          layout: {
+            visibility: layers.slope ? 'visible' : 'none',
+          },
           paint: {
             'fill-color': ['coalesce', ['get', 'warna'], '#1a9850'],
+            'fill-opacity': 0.55,
+          },
+        });
+      }
+
+      // Layer 1b: Kelas Longsor BPBD
+      if (!map.getLayer('layer-longsor-fill')) {
+        map.addLayer({
+          id: 'layer-longsor-fill',
+          type: 'fill',
+          source: 'src-longsor',
+          layout: {
+            visibility: layers.kelasLongsor ? 'visible' : 'none',
+          },
+          paint: {
+            'fill-color': [
+              'match',
+              ['get', 'KLS_BENC'],
+              'Tinggi', '#E11D48',
+              'Sedang', '#F59E0B',
+              'Rendah', '#10B981',
+              '#E11D48',
+            ],
+            'fill-opacity': 0.55,
+          },
+        });
+      }
+
+      // Layer 1c: Kelas Banjir BPBD
+      if (!map.getLayer('layer-banjir-fill')) {
+        map.addLayer({
+          id: 'layer-banjir-fill',
+          type: 'fill',
+          source: 'src-banjir',
+          layout: {
+            visibility: layers.kelasBanjir ? 'visible' : 'none',
+          },
+          paint: {
+            'fill-color': [
+              'match',
+              ['get', 'KLS_BENC'],
+              'Tinggi', '#1D4ED8',
+              'Sedang', '#3B82F6',
+              'Rendah', '#93C5FD',
+              '#3B82F6',
+            ],
             'fill-opacity': 0.55,
           },
         });
@@ -188,6 +243,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           id: 'layer-pola-ruang-fill',
           type: 'fill',
           source: 'src-pola-ruang',
+          layout: {
+            visibility: layers.polaRuang ? 'visible' : 'none',
+          },
           paint: {
             'fill-color': [
               'case',
@@ -477,6 +535,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     };
 
     setVis('layer-slope-fill', layers.slope);
+    setVis('layer-longsor-fill', layers.kelasLongsor);
+    setVis('layer-banjir-fill', layers.kelasBanjir);
     setVis('layer-pola-ruang-fill', layers.polaRuang);
     setVis('layer-badan-air-fill', layers.badanAir);
     setVis('layer-sungai-line', layers.sungai);

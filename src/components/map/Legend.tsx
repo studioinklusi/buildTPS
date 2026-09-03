@@ -112,6 +112,52 @@ export const Legend: React.FC<LegendProps> = ({ layers }) => {
             </div>
           )}
 
+          {/* 3b. Landslide Risk Legend */}
+          {layers.kelasLongsor && (
+            <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Risiko Tanah Longsor (BPBD)
+              </span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#E11D48] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Tinggi</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#F59E0B] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Sedang</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#10B981] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Rendah</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3c. Flood Risk Legend */}
+          {layers.kelasBanjir && (
+            <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Risiko Banjir (BPBD)
+              </span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#1D4ED8] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Tinggi</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#3B82F6] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Sedang</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded bg-[#93C5FD] shrink-0" />
+                  <span className="text-[10.5px]">Zona Risiko Rendah</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 4. Natural & Environment */}
           {(layers.sungai || layers.badanAir || layers.jaringanJalan) && (
             <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
