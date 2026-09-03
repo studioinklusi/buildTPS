@@ -240,26 +240,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         });
       }
 
-      // Layer 2: Pola Ruang RTRW
-      if (!map.getLayer('layer-pola-ruang-fill')) {
-        map.addLayer({
-          id: 'layer-pola-ruang-fill',
-          type: 'fill',
-          source: 'src-pola-ruang',
-          layout: {
-            visibility: layers.polaRuang ? 'visible' : 'none',
-          },
-          paint: {
-            'fill-color': [
-              'case',
-              ['==', ['get', 'Status'], 'Lindung'],
-              '#0284C7',
-              '#F59E0B',
-            ],
-            'fill-opacity': 0.45,
-          },
-        });
-      }
 
       // Layer 3: Jaringan Jalan Utama
       if (!map.getLayer('layer-jalan-line')) {
@@ -350,6 +330,54 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             'line-color': '#1E293B',
             'line-width': 0.6,
             'line-opacity': 0.7,
+          },
+        });
+      }
+
+      // Layer 5b: Pola Ruang RTRW (Full 13-zone ATR/BPN Standard Palette)
+      if (!map.getLayer('layer-pola-ruang-fill')) {
+        map.addLayer({
+          id: 'layer-pola-ruang-fill',
+          type: 'fill',
+          source: 'src-pola-ruang',
+          layout: {
+            visibility: layers.polaRuang ? 'visible' : 'none',
+          },
+          paint: {
+            'fill-color': [
+              'match',
+              ['get', 'NAMOBJ'],
+              'Kawasan Permukiman Perkotaan', '#EA580C',
+              'Kawasan Permukiman Perdesaan', '#FBBF24',
+              'Kawasan Tanaman Pangan', '#84CC16',
+              'Kawasan Hortikultura', '#65A30D',
+              'Kawasan Perkebunan', '#15803D',
+              'Kawasan Hutan Produksi Tetap', '#16A34A',
+              'Kawasan Hutan Produksi Terbatas', '#22C55E',
+              'Kawasan Hutan Lindung', '#065F46',
+              'Cagar Alam', '#064E3B',
+              'Kawasan Peruntukan Industri', '#7C3AED',
+              'Badan Air', '#0284C7',
+              'Kawasan Cagar Budaya', '#9333EA',
+              'Kawasan Keunikan Batuan dan Fosil', '#D97706',
+              '#94A3B8',
+            ],
+            'fill-opacity': 0.72,
+          },
+        });
+      }
+      if (!map.getLayer('layer-pola-ruang-line')) {
+        map.addLayer({
+          id: 'layer-pola-ruang-line',
+          type: 'line',
+          source: 'src-pola-ruang',
+          layout: {
+            visibility: layers.polaRuang ? 'visible' : 'none',
+          },
+          paint: {
+            'line-color': '#1E293B',
+            'line-width': 0.6,
+            'line-opacity': 0.45,
           },
         });
       }
@@ -638,7 +666,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           'layer-badan-air-fill',
           'layer-sempadan-sungai-fill',
           'layer-sungai-line',
+          ...(layers.polaRuang && !layers.suitabilityOverlay ? ['layer-pola-ruang-fill'] : []),
           'layer-suitability-fill',
+          'layer-pola-ruang-fill',
         ],
       });
 
@@ -767,6 +797,34 @@ export const MapContainer: React.FC<MapContainerProps> = ({
               <div class="space-y-1.5 text-[10.5px] text-slate-600 border-t pt-2">
                 <div><b>Dasar Regulasi:</b> PP No. 38 Tahun 2011 & SNI 19-3241-1994.</div>
                 <div><b>Dampak Risiko:</b> Pencucian lindi (leachate) langsung ke badan air, bahaya longsor tebing sungai, dan risiko terseret banjir bandang.</div>
+              </div>
+            </div>
+            `
+          )
+          .addTo(map);
+        return;
+      }
+
+      // 3b. Popup: Pola Ruang RTRW
+      if (topFeat.layer.id === 'layer-pola-ruang-fill') {
+        const zonaName = p.NAMOBJ || 'Kawasan Budidaya';
+        const isLindung = p.Status === 'Lindung' || zonaName.toLowerCase().includes('lindung') || zonaName.toLowerCase().includes('cagar') || zonaName.toLowerCase().includes('air');
+        new maplibregl.Popup({ closeButton: true, maxWidth: '300px' })
+          .setLngLat(e.lngLat)
+          .setHTML(
+            `
+            <div class="p-3 space-y-2 text-xs text-slate-800 font-sans">
+              <div class="border-b pb-1.5 flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-purple-700">Pola Ruang RTRW</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${isLindung ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                  ${isLindung ? 'Kawasan Lindung' : 'Kawasan Budidaya'}
+                </span>
+              </div>
+              <div class="font-bold text-sm text-slate-900">${zonaName}</div>
+              <div class="text-[11px] text-slate-600 leading-relaxed">
+                ${isLindung 
+                  ? '<b>Status Regulasi: Dilarang Mutlak.</b> Berdasarkan Perda RTRW Kab. Banjarnegara, kawasan lindung tidak diizinkan untuk sarana persampahan (Skor Bobot: 0).' 
+                  : '<b>Status Regulasi: Diizinkan.</b> Termasuk kawasan budidaya yang memenuhi kriteria kelayakan teknis tata ruang untuk penempatan TPS / TPS 3R.'}
               </div>
             </div>
             `

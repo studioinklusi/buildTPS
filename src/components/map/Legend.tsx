@@ -158,6 +158,57 @@ export const Legend: React.FC<LegendProps> = ({ layers }) => {
             </div>
           )}
 
+          {/* 3d. Pola Ruang RTRW Legend */}
+          {layers.polaRuang && (
+            <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                Pola Ruang RTRW (ATR/BPN)
+              </span>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#EA580C] shrink-0" />
+                  <span className="truncate">Permukiman Kota</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#FBBF24] shrink-0" />
+                  <span className="truncate">Permukiman Desa</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#84CC16] shrink-0" />
+                  <span className="truncate">Tanaman Pangan</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#65A30D] shrink-0" />
+                  <span className="truncate">Hortikultura</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#15803D] shrink-0" />
+                  <span className="truncate">Perkebunan</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#16A34A] shrink-0" />
+                  <span className="truncate">Hutan Produksi</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#065F46] shrink-0" />
+                  <span className="truncate">Hutan Lindung</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#7C3AED] shrink-0" />
+                  <span className="truncate">Industri</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#0284C7] shrink-0" />
+                  <span className="truncate">Badan Air</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-[#9333EA] shrink-0" />
+                  <span className="truncate">Cagar Budaya</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 4. Natural & Environment */}
           {(layers.sungai || layers.badanAir || layers.jaringanJalan) && (
             <div className="space-y-1.5 pt-2 border-t border-slate-200/80">
