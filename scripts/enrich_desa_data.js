@@ -56,13 +56,13 @@ banjirData.features.forEach(f => {
 
 // Flatten roads, rivers, and waterbodies into LineString segments
 const flatRoads = [];
-jalanData.features.slice(0, 150).forEach(f => {
+jalanData.features.forEach(f => {
   const flat = turf.flatten(f);
   flat.features.forEach(ff => { if (ff.geometry.type === 'LineString') flatRoads.push(ff); });
 });
 
 const flatRivers = [];
-sungaiData.features.slice(0, 100).forEach(f => {
+sungaiData.features.forEach(f => {
   const flat = turf.flatten(f);
   flat.features.forEach(ff => { if (ff.geometry.type === 'LineString') flatRivers.push(ff); });
 });
