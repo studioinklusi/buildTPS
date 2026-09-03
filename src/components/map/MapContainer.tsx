@@ -140,6 +140,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       if (!map.getSource('src-banjir')) {
         map.addSource('src-banjir', { type: 'geojson', data: '/data/kelas_banjir.geojson' });
       }
+      if (!map.getSource('src-sempadan-sungai')) {
+        map.addSource('src-sempadan-sungai', { type: 'geojson', data: '/data/sempadan_sungai.geojson' });
+      }
 
       // 2. Dynamic Sources (Initialize with current or empty GeoJSON)
       if (!map.getSource('src-service-gap')) {
@@ -258,39 +261,15 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         });
       }
 
-      // Layer 3: Badan Air (Danau / Waduk Mrica)
-      if (!map.getLayer('layer-badan-air-fill')) {
-        map.addLayer({
-          id: 'layer-badan-air-fill',
-          type: 'fill',
-          source: 'src-badan-air',
-          paint: {
-            'fill-color': '#38BDF8',
-            'fill-opacity': 0.6,
-          },
-        });
-      }
-
-      // Layer 4: Sungai
-      if (!map.getLayer('layer-sungai-line')) {
-        map.addLayer({
-          id: 'layer-sungai-line',
-          type: 'line',
-          source: 'src-sungai',
-          paint: {
-            'line-color': '#0EA5E9',
-            'line-width': 1.6,
-            'line-opacity': 0.8,
-          },
-        });
-      }
-
-      // Layer 5: Jaringan Jalan Utama
+      // Layer 3: Jaringan Jalan Utama
       if (!map.getLayer('layer-jalan-line')) {
         map.addLayer({
           id: 'layer-jalan-line',
           type: 'line',
           source: 'src-jalan',
+          layout: {
+            visibility: layers.jaringanJalan ? 'visible' : 'none',
+          },
           paint: {
             'line-color': '#475569',
             'line-width': 1.2,
@@ -299,12 +278,15 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         });
       }
 
-      // Layer 6: Service Gap (Area Belum Terlayani - Red)
+      // Layer 4: Service Gap (Area Belum Terlayani - Red)
       if (!map.getLayer('layer-service-gap-fill')) {
         map.addLayer({
           id: 'layer-service-gap-fill',
           type: 'fill',
           source: 'src-service-gap',
+          layout: {
+            visibility: layers.serviceGap ? 'visible' : 'none',
+          },
           paint: {
             'fill-color': '#DC2626',
             'fill-opacity': 0.28,
@@ -316,6 +298,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           id: 'layer-service-gap-line',
           type: 'line',
           source: 'src-service-gap',
+          layout: {
+            visibility: layers.serviceGap ? 'visible' : 'none',
+          },
           paint: {
             'line-color': '#EF4444',
             'line-width': 1.5,
@@ -324,12 +309,15 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         });
       }
 
-      // Layer 7: Suitability Overlay (Primary Decision Layer)
+      // Layer 5: Suitability Overlay (Primary Decision Layer)
       if (!map.getLayer('layer-suitability-fill')) {
         map.addLayer({
           id: 'layer-suitability-fill',
           type: 'fill',
           source: 'src-suitability',
+          layout: {
+            visibility: layers.suitabilityOverlay ? 'visible' : 'none',
+          },
           paint: {
             'fill-color': [
               'match',
@@ -355,10 +343,93 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           id: 'layer-suitability-line',
           type: 'line',
           source: 'src-suitability',
+          layout: {
+            visibility: layers.suitabilityOverlay ? 'visible' : 'none',
+          },
           paint: {
             'line-color': '#1E293B',
             'line-width': 0.6,
             'line-opacity': 0.7,
+          },
+        });
+      }
+
+      // Layer 6: Sempadan Sungai Buffer 50m (Hard Constraint Mask)
+      if (!map.getLayer('layer-sempadan-sungai-fill')) {
+        map.addLayer({
+          id: 'layer-sempadan-sungai-fill',
+          type: 'fill',
+          source: 'src-sempadan-sungai',
+          layout: {
+            visibility: layers.sungai ? 'visible' : 'none',
+          },
+          paint: {
+            'fill-color': '#0284C7',
+            'fill-opacity': 0.35,
+          },
+        });
+      }
+      if (!map.getLayer('layer-sempadan-sungai-line')) {
+        map.addLayer({
+          id: 'layer-sempadan-sungai-line',
+          type: 'line',
+          source: 'src-sempadan-sungai',
+          layout: {
+            visibility: layers.sungai ? 'visible' : 'none',
+          },
+          paint: {
+            'line-color': '#0284C7',
+            'line-width': 1,
+            'line-opacity': 0.7,
+            'line-dasharray': [3, 2],
+          },
+        });
+      }
+
+      // Layer 7: Badan Air & Waduk Mrica (Kawasan Lindung Perairan - Hard Constraint)
+      if (!map.getLayer('layer-badan-air-fill')) {
+        map.addLayer({
+          id: 'layer-badan-air-fill',
+          type: 'fill',
+          source: 'src-badan-air',
+          layout: {
+            visibility: layers.badanAir ? 'visible' : 'none',
+          },
+          paint: {
+            'fill-color': '#0284C7',
+            'fill-opacity': 0.82,
+          },
+        });
+      }
+      if (!map.getLayer('layer-badan-air-line')) {
+        map.addLayer({
+          id: 'layer-badan-air-line',
+          type: 'line',
+          source: 'src-badan-air',
+          layout: {
+            visibility: layers.badanAir ? 'visible' : 'none',
+          },
+          paint: {
+            'line-color': '#0369A1',
+            'line-width': 1.6,
+            'line-opacity': 1.0,
+          },
+        });
+      }
+
+      // Layer 8: Sungai (Aliran Air Utama)
+      if (!map.getLayer('layer-sungai-line')) {
+        map.addLayer({
+          id: 'layer-sungai-line',
+          type: 'line',
+          source: 'src-sungai',
+          layout: {
+            visibility: layers.sungai ? 'visible' : 'none',
+          },
+          paint: {
+            'line-color': '#0369A1',
+            'line-width': 2.0,
+            'line-opacity': 0.95,
           },
         });
       }
@@ -539,6 +610,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     setVis('layer-banjir-fill', layers.kelasBanjir);
     setVis('layer-pola-ruang-fill', layers.polaRuang);
     setVis('layer-badan-air-fill', layers.badanAir);
+    setVis('layer-badan-air-line', layers.badanAir);
+    setVis('layer-sempadan-sungai-fill', layers.sungai);
+    setVis('layer-sempadan-sungai-line', layers.sungai);
     setVis('layer-sungai-line', layers.sungai);
     setVis('layer-jalan-line', layers.jaringanJalan);
     setVis('layer-service-gap-fill', layers.serviceGap);
@@ -559,7 +633,13 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, {
-        layers: ['layer-suitability-fill', 'layer-tps-points'],
+        layers: [
+          'layer-tps-points',
+          'layer-badan-air-fill',
+          'layer-sempadan-sungai-fill',
+          'layer-sungai-line',
+          'layer-suitability-fill',
+        ],
       });
 
       if (!features || features.length === 0) {
@@ -570,18 +650,42 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       const topFeat = features[0];
       const p = topFeat.properties as any;
 
+      // 1. Popup: Titik TPS Eksisting / Uploaded
       if (topFeat.layer.id === 'layer-tps-points') {
-        new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+        // Check if TPS point falls within a waterbody or river buffer
+        const waterHits = map.queryRenderedFeatures(e.point, {
+          layers: ['layer-badan-air-fill', 'layer-sempadan-sungai-fill'],
+        });
+        const isIllegalWaterLocation = waterHits && waterHits.length > 0;
+
+        new maplibregl.Popup({ closeButton: true, maxWidth: '290px' })
           .setLngLat(e.lngLat)
           .setHTML(
             `
-            <div class="p-2 space-y-1.5 text-xs text-slate-800">
-              <div class="font-bold text-sm text-slate-900 border-b pb-1">
-                🗑️ ${p.name || 'TPS Eksisting'}
+            <div class="p-2.5 space-y-2 text-xs text-slate-800 font-sans">
+              <div class="font-bold text-sm text-slate-900 border-b pb-1 flex items-center justify-between">
+                <span>🗑️ ${p.name || 'TPS Eksisting'}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded ${isIllegalWaterLocation ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'} font-semibold">
+                  ${isIllegalWaterLocation ? 'Ilegal/Bahaya' : 'Aktif'}
+                </span>
               </div>
-              <div><b>Kapasitas:</b> ${p.capacityM3 || 6} m³</div>
-              <div><b>Tipe:</b> ${p.type || 'TPS 3R'}</div>
-              <div><b>Wilayah:</b> ${p.desa || ''}, ${p.kecamatan || 'Banjarnegara'}</div>
+              <div class="space-y-1 text-[11px] text-slate-700">
+                <div><b>Kapasitas:</b> ${p.capacityM3 || 6} m³</div>
+                <div><b>Tipe:</b> ${p.type || 'TPS 3R'}</div>
+                <div><b>Wilayah:</b> ${p.desa || ''}, ${p.kecamatan || 'Banjarnegara'}</div>
+              </div>
+              ${
+                isIllegalWaterLocation
+                  ? `
+                <div class="p-2 rounded bg-rose-50 border border-rose-200 text-rose-800 text-[10.5px] leading-tight space-y-1">
+                  <div class="font-bold text-rose-900 flex items-center gap-1">
+                    ⚠️ PELANGGARAN ZONA LINDUNG
+                  </div>
+                  <div>Titik TPS ini terdeteksi berada di dalam <b>Badan Air / Sempadan Sungai</b>! Menurut SNI 19-3241-1994, titik ini wajib direlokasi ke daratan aman.</div>
+                </div>
+              `
+                  : ''
+              }
             </div>
             `
           )
@@ -589,7 +693,89 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         return;
       }
 
-      // Suitability Feature Popup
+      // 2. Popup: Badan Air / Waduk Mrica (Hard Constraint)
+      if (topFeat.layer.id === 'layer-badan-air-fill') {
+        const waterName = p.name || 'Waduk Mrica (Bendungan PB Soedirman)';
+        new maplibregl.Popup({ closeButton: true, maxWidth: '320px' })
+          .setLngLat(e.lngLat)
+          .setHTML(
+            `
+            <div class="p-3 space-y-2.5 text-xs text-slate-800 max-w-xs font-sans">
+              <div class="border-b pb-2">
+                <div class="text-[10px] uppercase font-black text-rose-600 tracking-wider flex items-center gap-1">
+                  ⛔ HARD CONSTRAINT (ZONA TERELIMINASI)
+                </div>
+                <div class="text-sm font-bold text-slate-900 leading-tight mt-0.5">
+                  ${waterName}
+                </div>
+                <div class="text-[11px] text-slate-600">
+                  Kawasan Konservasi Perairan & Sumber Daya Air
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 space-y-1">
+                <div class="font-bold flex items-center justify-between text-xs">
+                  <span>Kategori Kelayakan:</span>
+                  <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black">TIDAK LAYAK (SKOR 0)</span>
+                </div>
+                <div class="text-[11px] text-rose-800 leading-relaxed pt-1">
+                  <b>Dilarang Mutlak:</b> Lokasi ini berada langsung di dalam perairan waduk aktif. Penempatan sarana persampahan di badan air melanggar undang-undang dan dilarang keras.
+                </div>
+              </div>
+
+              <div class="space-y-1.5 text-[10.5px] text-slate-600 border-t pt-2">
+                <div><b>Dasar Regulasi:</b> SNI 19-3241-1994 (Kriteria Pemilihan Lokasi TPA/TPS) Pasal 4 & Permen LHK No. P.59/2016.</div>
+                <div><b>Dampak Risiko:</b> Pencemaran air baku PDAM, sedimentasi turbin PLTA Mrica, dan pencemaran bahan beracun ke ekosistem air.</div>
+              </div>
+            </div>
+            `
+          )
+          .addTo(map);
+        return;
+      }
+
+      // 3. Popup: Sempadan Sungai Buffer 50m / Sungai
+      if (topFeat.layer.id === 'layer-sempadan-sungai-fill' || topFeat.layer.id === 'layer-sungai-line') {
+        const riverName = p.name || 'Sungai Serayu';
+        new maplibregl.Popup({ closeButton: true, maxWidth: '320px' })
+          .setLngLat(e.lngLat)
+          .setHTML(
+            `
+            <div class="p-3 space-y-2.5 text-xs text-slate-800 max-w-xs font-sans">
+              <div class="border-b pb-2">
+                <div class="text-[10px] uppercase font-black text-rose-600 tracking-wider flex items-center gap-1">
+                  ⛔ HARD CONSTRAINT (SEMPADAN SUNGAI)
+                </div>
+                <div class="text-sm font-bold text-slate-900 leading-tight mt-0.5">
+                  Sempadan ${riverName}
+                </div>
+                <div class="text-[11px] text-slate-600">
+                  Buffer Perlindungan Sempadan Aliran Sungai (50 Meter)
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 space-y-1">
+                <div class="font-bold flex items-center justify-between text-xs">
+                  <span>Kategori Kelayakan:</span>
+                  <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black">TIDAK LAYAK (SKOR 0)</span>
+                </div>
+                <div class="text-[11px] text-rose-800 leading-relaxed pt-1">
+                  <b>Dilarang Mutlak:</b> Berada di dalam radius sempadan sungai (&lt; 50 meter). Menurut PP No. 38/2011 dan Permen PUPR No. 28/2015, sempadan sungai dilindungi dari aktivitas penampungan sampah.
+                </div>
+              </div>
+
+              <div class="space-y-1.5 text-[10.5px] text-slate-600 border-t pt-2">
+                <div><b>Dasar Regulasi:</b> PP No. 38 Tahun 2011 & SNI 19-3241-1994.</div>
+                <div><b>Dampak Risiko:</b> Pencucian lindi (leachate) langsung ke badan air, bahaya longsor tebing sungai, dan risiko terseret banjir bandang.</div>
+              </div>
+            </div>
+            `
+          )
+          .addTo(map);
+        return;
+      }
+
+      // 4. Suitability Feature Popup (Daratan Desa)
       const catColor = SUITABILITY_COLORS[p.category as keyof typeof SUITABILITY_COLORS]?.fill || '#64748B';
       let constraintList: string[] = [];
       if (Array.isArray(p.constraintReasons)) {

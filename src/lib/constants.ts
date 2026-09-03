@@ -48,8 +48,8 @@ export const DEFAULT_LAYER_VISIBILITY: LayerVisibilityState = {
   jaringanJalan: false,
   
   // Environment
-  sungai: false,
-  badanAir: false,
+  sungai: true,
+  badanAir: true,
   slope: false,
   
   // Planning & Hazard

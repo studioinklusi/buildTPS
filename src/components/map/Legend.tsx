@@ -173,14 +173,14 @@ export const Legend: React.FC<LegendProps> = ({ layers }) => {
                 )}
                 {layers.sungai && (
                   <div className="flex items-center gap-2">
-                    <span className="w-4 h-1 rounded bg-cyan-600 shrink-0" />
-                    <span className="text-[10.5px]">Sungai (Buffer Sempadan)</span>
+                    <span className="w-3.5 h-3.5 rounded bg-[#0284C7]/40 border border-[#0284C7] shrink-0" />
+                    <span className="text-[10.5px]">Sempadan Sungai (Buffer 50m - Skor 0)</span>
                   </div>
                 )}
                 {layers.badanAir && (
                   <div className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded bg-sky-500/80 shrink-0" />
-                    <span className="text-[10.5px]">Badan Air / Waduk Mrica</span>
+                    <span className="w-3.5 h-3.5 rounded bg-[#0284C7] border border-[#075985] shrink-0" />
+                    <span className="text-[10.5px]">Badan Air / Waduk Mrica (Skor 0)</span>
                   </div>
                 )}
               </div>
