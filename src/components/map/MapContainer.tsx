@@ -865,7 +865,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
               </div>
               <div class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 border border-slate-200/70">
                 <span class="text-slate-500">Banjir:</span>
-                <span class="font-bold ${p.floodRiskLevel === 'Tinggi' ? 'text-blue-700' : p.floodRiskLevel === 'Sedang' ? 'text-blue-500' : 'text-emerald-600'}">
+                <span class="font-bold ${p.floodRiskLevel === 'Tinggi' ? 'text-rose-600' : p.floodRiskLevel === 'Sedang' ? 'text-amber-600' : 'text-emerald-600'}">
                   ${p.floodRiskLevel}
                 </span>
               </div>
