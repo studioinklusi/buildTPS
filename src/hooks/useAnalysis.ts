@@ -228,11 +228,11 @@ export function useAnalysis() {
         populationTimeseries.metadata?.kabupaten_annual_growth_rate ||
         0.00722;
 
-      // Village population fallback
+      // Village population from enriched dataset or timeseries metadata
       const villageMeta = kecMeta?.villages?.find(
         (v: any) => v.name?.toUpperCase() === desaName?.toUpperCase()
       );
-      const basePop = villageMeta?.population_2026 || 3800; // average desa size in Banjarnegara
+      const basePop = p.population_2026 || villageMeta?.population_2026 || 3800;
 
       const forecast = runPopulationForecast(
         basePop,
@@ -249,21 +249,15 @@ export function useAnalysis() {
       const centroid = turf.centroid(feat);
       const [cLng, cLat] = centroid.geometry.coordinates;
 
-      // Simulated physical attributes based on topography & region characteristics
-      // (Uses real spatial proxies for slope and distance)
-      const latOffset = Math.abs(cLat - (-7.35));
-      const lngOffset = Math.abs(cLng - 109.65);
+      // Real spatial attributes from enriched dataset
+      const slopeVal = p.slope_percent !== undefined ? p.slope_percent : (cLat > -7.30 ? 25 : 8);
+      const nearestRoadDistance = p.nearest_road_distance_m !== undefined ? p.nearest_road_distance_m : 250;
+      const riverDist = p.nearest_river_distance_m !== undefined ? p.nearest_river_distance_m : 200;
+      const waterDist = p.nearest_water_distance_m !== undefined ? p.nearest_water_distance_m : 1500;
       
-      // Northern Banjarnegara (Dieng/Batur/Wanayasa) has higher slope and landslide risk
-      const isNorthernHighland = cLat > -7.30;
-      const slopeSimulated = isNorthernHighland ? 18 + latOffset * 120 : 4 + latOffset * 25;
-      const nearestRoadDistance = 80 + (latOffset + lngOffset) * 2000;
-      const riverDist = 120 + Math.sin(idx) * 80;
-      const waterDist = 450 + Math.cos(idx) * 200;
-      
-      const rtrwStatus = isNorthernHighland && slopeSimulated > 40 ? 'Kawasan Lindung' : 'Kawasan Permukiman';
-      const landslideRisk = isNorthernHighland ? (slopeSimulated > 25 ? 'Tinggi' : 'Sedang') : 'Rendah';
-      const floodRisk = !isNorthernHighland && cLat < -7.42 ? 'Sedang' : 'Rendah';
+      const rtrwStatus = p.RTRW || 'Kawasan Permukiman Perdesaan';
+      const landslideRisk = p.landslide_risk || (slopeVal > 25 ? 'Tinggi' : slopeVal > 15 ? 'Sedang' : 'Rendah');
+      const floodRisk = p.flood_risk || 'Rendah';
 
       // Area in Hectares
       const areaM2 = turf.area(feat);
@@ -283,7 +277,7 @@ export function useAnalysis() {
 
       // Constraint check
       const constraint = evaluateHardConstraints(
-        slopeSimulated,
+        slopeVal,
         rtrwStatus,
         riverDist,
         waterDist,
@@ -293,7 +287,7 @@ export function useAnalysis() {
       // Criteria scores (0 - 100)
       const scorePop = normalizePopulationScore(forecast.pt);
       const scoreAcc = normalizeAccessibilityScore(nearestRoadDistance, thresholds.maxRoadDistance);
-      const scoreSlope = normalizeSlopeScore(slopeSimulated);
+      const scoreSlope = normalizeSlopeScore(slopeVal);
       const scorePlan = normalizeSpatialPlanningScore(rtrwStatus);
       const scoreLand = normalizeLandslideScore(landslideRisk);
       const scoreFlood = normalizeFloodScore(floodRisk);
@@ -338,8 +332,8 @@ export function useAnalysis() {
         populationProjected: forecast.pt,
         wasteGenerationDailyM3: Math.round(forecast.wasteGenerationDailyM3 * 10) / 10,
         nearestRoadDistanceM: Math.round(nearestRoadDistance),
-        slopePercent: Math.round(slopeSimulated * 10) / 10,
-        slopeCategory: slopeSimulated <= 8 ? 'Datar (0-8%)' : slopeSimulated <= 15 ? 'Landai (8-15%)' : slopeSimulated <= 25 ? 'Agak Curam (15-25%)' : 'Curam (25-40%)',
+        slopePercent: Math.round(slopeVal * 10) / 10,
+        slopeCategory: p.slope_category || (slopeVal <= 8 ? 'Datar (0-8%)' : slopeVal <= 15 ? 'Landai (8-15%)' : slopeVal <= 25 ? 'Agak Curam (15-25%)' : 'Curam (25-40%)'),
         spatialPlanningStatus: rtrwStatus,
         landslideRiskLevel: landslideRisk,
         floodRiskLevel: floodRisk,

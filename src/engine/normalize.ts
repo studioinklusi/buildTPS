@@ -32,10 +32,24 @@ export function normalizeSlopeScore(slopePercent: number): number {
 // 4. Spatial Planning (RTRW) Score
 export function normalizeSpatialPlanningScore(status: string): number {
   const clean = status.toLowerCase();
-  if (clean.includes('lindung') || clean.includes('konservasi')) return 0;
-  if (clean.includes('permukiman') || clean.includes('perkotaan')) return 100;
+  if (
+    clean.includes('lindung') ||
+    clean.includes('konservasi') ||
+    clean.includes('cagar') ||
+    clean.includes('badan air') ||
+    clean.includes('fosil')
+  ) {
+    return 0;
+  }
+  if (clean.includes('perkotaan')) return 100;
+  if (clean.includes('permukiman')) return 95;
   if (clean.includes('perdagangan') || clean.includes('jasa')) return 90;
-  if (clean.includes('perkebunan') || clean.includes('pertanian')) return 70;
+  if (clean.includes('industri')) return 80;
+  if (clean.includes('tanaman pangan')) return 75;
+  if (clean.includes('hortikultura')) return 70;
+  if (clean.includes('perkebunan')) return 65;
+  if (clean.includes('produksi terbatas')) return 55;
+  if (clean.includes('produksi tetap')) return 50;
   return 60; // Default budidaya
 }
 
