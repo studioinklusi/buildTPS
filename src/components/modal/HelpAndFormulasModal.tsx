@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   FileText,
   HelpCircle,
+  Truck,
 } from 'lucide-react';
 
 interface HelpAndFormulasModalProps {
@@ -239,13 +240,24 @@ export const HelpAndFormulasModal: React.FC<HelpAndFormulasModalProps> = ({
                     </p>
                     <ul className="text-[11px] space-y-1 text-slate-700 list-disc pl-4 font-medium">
                       <li>Kepadatan Penduduk (Bobot: 25%)</li>
-                      <li>Aksesibilitas Jaringan Jalan (Bobot: 20%)</li>
+                      <li>Aksesibilitas Truk Pengangkut (Bobot: 20%)</li>
                       <li>Kemiringan Lereng Datar/Landai (Bobot: 15%)</li>
                       <li>Kesesuaian Tata Ruang RTRW (Bobot: 15%)</li>
                       <li>Mitigasi Risiko Longsor BPBD (Bobot: 15%)</li>
                       <li>Mitigasi Risiko Banjir BPBD (Bobot: 5%)</li>
                       <li>Jarak Aman Lingkungan (Bobot: 5%)</li>
                     </ul>
+
+                    {/* Catatan Teknis Aksesibilitas Truk */}
+                    <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-900 space-y-1 mt-2">
+                      <div className="font-bold flex items-center gap-1.5 text-blue-950">
+                        <Truck className="w-3.5 h-3.5 text-blue-700" />
+                        Mengapa Menggunakan 7.215 Ruas Jalan Utama & Kolektor?
+                      </div>
+                      <p className="text-blue-800/90 leading-relaxed text-[10.5px]">
+                        Berdasarkan <b>SNI 19-3241-1994</b> dan <b>Permen PU 03/2013</b>, sarana TPS memerlukan akses kendaraan operasional pengangkut sampah (Truk Armroll kapasitas 6–8 m³, Truk Compactor, atau Truk Tipper). Truk ini membutuhkan lebar badan jalan minimal 4–6 meter dengan daya dukung perkerasan memadai. Ruas gang pemukiman sempit (&lt;3 meter) dieksklusi dari perhitungan kelayakan jarak agar dinas tidak menempatkan kontainer sampah di lokasi yang mustahil dijangkau oleh armada truk pengangkut.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -321,8 +333,11 @@ export const HelpAndFormulasModal: React.FC<HelpAndFormulasModalProps> = ({
                         <td className="p-2.5 font-bold text-emerald-700">25%</td>
                       </tr>
                       <tr>
-                        <td className="p-2.5 font-semibold text-slate-800">Aksesibilitas Jalan</td>
-                        <td className="p-2.5 text-slate-600">Jaringan Jalan Utama Banjarnegara</td>
+                        <td className="p-2.5 font-semibold text-slate-800">Aksesibilitas Truk Pengangkut</td>
+                        <td className="p-2.5 text-slate-600">
+                          <div>Koridor Jalan Arteri & Kolektor (7.215 Ruas)</div>
+                          <div className="text-[10px] text-blue-700 font-medium mt-0.5">*Standar manuver armada truk kontainer armroll 6–8 m³ (SNI 19-3241-1994)</div>
+                        </td>
                         <td className="p-2.5 text-slate-600">Meter (Euclidean)</td>
                         <td className="p-2.5 text-slate-600">&le;50m=100; inverse linear s.d. &gt;1000m=10</td>
                         <td className="p-2.5 font-bold text-blue-700">20%</td>

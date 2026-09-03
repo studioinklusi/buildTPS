@@ -70,8 +70,9 @@ const LAYER_GROUPS: LayerGroup[] = [
       },
       {
         key: 'jaringanJalan',
-        label: 'Jaringan Jalan Utama',
-        color: '#475569',
+        label: 'Akses Truk Pengangkut',
+        color: '#2563EB',
+        badge: '7.215 Ruas',
       },
     ],
   },

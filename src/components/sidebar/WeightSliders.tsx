@@ -26,8 +26,8 @@ const CRITERIA_METADATA: {
   },
   {
     key: 'accessibility',
-    label: 'Aksesibilitas Jalan',
-    description: 'Kemudahan manuver truk sampah',
+    label: 'Aksesibilitas Truk Pengangkut',
+    description: 'Kedekatan ke koridor manuver truk armroll kontainer',
     color: 'accent-blue-600',
   },
   {

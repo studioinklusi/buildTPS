@@ -217,9 +217,22 @@ export const Legend: React.FC<LegendProps> = ({ layers }) => {
               </span>
               <div className="space-y-1">
                 {layers.jaringanJalan && (
-                  <div className="flex items-center gap-2">
-                    <span className="w-4 h-1 rounded bg-slate-500 shrink-0" />
-                    <span className="text-[10.5px]">Jaringan Jalan Utama</span>
+                  <div className="space-y-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80 mb-1">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-700">
+                      <span>Aksesibilitas Truk Pengangkut</span>
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-blue-100 text-blue-800 font-semibold">SNI 19-3241-1994</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-[3px] rounded bg-[#2563EB] shrink-0" />
+                      <span className="text-[10.5px] text-slate-700 font-medium">Jalan Arteri / Utama (Truk Kontainer Besar)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-[1.8px] rounded bg-[#64748B] shrink-0" />
+                      <span className="text-[10.5px] text-slate-600">Jalan Kolektor / Sekunder (Truk Armroll 6–8m³)</span>
+                    </div>
+                    <div className="text-[9px] text-slate-400 italic pt-0.5 border-t border-slate-200/60 leading-tight">
+                      *Ruas gang sempit (&lt;3m) dieksklusi karena tidak dapat dilalui truk kontainer dinas.
+                    </div>
                   </div>
                 )}
                 {layers.sungai && (

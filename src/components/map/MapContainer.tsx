@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as maplibregl from 'maplibre-gl';
+import * as turf from '@turf/turf';
 type MapLibreMap = maplibregl.Map;
 type Popup = maplibregl.Popup;
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -47,6 +48,26 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const popupRef = useRef<Popup | null>(null);
   const [currentBasemap, setCurrentBasemap] = useState<BasemapType>('streets');
   const [mapLoaded, setMapLoaded] = useState(false);
+  const roadsIndexRef = useRef<{ line: any; bbox: number[] }[]>([]);
+
+  // Pre-index road segments in background for instantaneous point-to-road distance on click
+  useEffect(() => {
+    fetch('/data/jaringan_jalan.geojson')
+      .then((res) => res.json())
+      .then((data) => {
+        const flat: { line: any; bbox: number[] }[] = [];
+        for (const f of data.features || []) {
+          const fl = turf.flatten(f);
+          for (const ff of fl.features) {
+            if ((ff.geometry as any).type === 'LineString') {
+              flat.push({ line: ff, bbox: turf.bbox(ff) });
+            }
+          }
+        }
+        roadsIndexRef.current = flat;
+      })
+      .catch(() => {});
+  }, []);
 
   // Helper to build initial style with all 3 raster basemap providers
   const buildInitialStyle = useCallback((): maplibregl.StyleSpecification => {
@@ -241,19 +262,34 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       }
 
 
-      // Layer 3: Jaringan Jalan Utama
+      // Layer 3: Jaringan Jalan Utama & Kolektor (Akses Truk Pengangkut)
       if (!map.getLayer('layer-jalan-line')) {
         map.addLayer({
           id: 'layer-jalan-line',
           type: 'line',
           source: 'src-jalan',
           layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
             visibility: layers.jaringanJalan ? 'visible' : 'none',
           },
           paint: {
-            'line-color': '#475569',
-            'line-width': 1.2,
-            'line-opacity': 0.7,
+            // Visual hierarchy: Arteri/Trunk/Primary in bold blue (#2563EB), Sekunder/Kolektor in slate (#64748B)
+            'line-color': [
+              'match',
+              ['get', 'road_class'],
+              1,
+              '#2563EB',
+              '#64748B',
+            ],
+            'line-width': [
+              'match',
+              ['get', 'road_class'],
+              1,
+              2.6,
+              1.4,
+            ],
+            'line-opacity': 0.85,
           },
         });
       }
@@ -666,6 +702,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           'layer-badan-air-fill',
           'layer-sempadan-sungai-fill',
           'layer-sungai-line',
+          ...(layers.jaringanJalan ? ['layer-jalan-line'] : []),
           ...(layers.polaRuang && !layers.suitabilityOverlay ? ['layer-pola-ruang-fill'] : []),
           'layer-suitability-fill',
           'layer-pola-ruang-fill',
@@ -805,7 +842,58 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         return;
       }
 
-      // 3b. Popup: Pola Ruang RTRW
+      // 3b. Popup: Koridor Jalan Aksesibilitas Truk Pengangkut (SNI 19-3241-1994)
+      if (topFeat.layer.id === 'layer-jalan-line') {
+        const roadName = p.name ? p.name : (p.road_class === 1 ? 'Ruas Jalan Arteri / Poros Utama' : 'Ruas Jalan Kolektor / Sekunder');
+        const roadClassLabel = p.road_class_label || (p.road_class === 1 ? 'Jalan Arteri' : 'Jalan Kolektor');
+        const highwayType = (p.highway || '').toUpperCase();
+        const roadLen = p.length ? Math.round(p.length) : null;
+        const isArteri = p.road_class === 1;
+
+        new maplibregl.Popup({ closeButton: true, maxWidth: '330px' })
+          .setLngLat(e.lngLat)
+          .setHTML(
+            `
+            <div class="p-3 space-y-2.5 text-xs text-slate-800 max-w-xs font-sans">
+              <div class="border-b pb-2">
+                <div class="text-[10px] uppercase font-black text-blue-600 tracking-wider flex items-center gap-1.5">
+                  <span>🚛 KORIDOR AKSESIBILITAS TRUK PENGANGKUT</span>
+                </div>
+                <div class="text-sm font-bold text-slate-900 leading-tight mt-1">
+                  ${roadName}
+                </div>
+                <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded ${isArteri ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'} font-semibold text-[10px]">
+                    ${roadClassLabel} (${highwayType})
+                  </span>
+                  ${roadLen ? `<span class="text-slate-400">• Panjang: ${roadLen} m</span>` : ''}
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-blue-50/70 border border-blue-200 text-blue-950 space-y-1.5">
+                <div class="font-bold flex items-center justify-between text-xs text-blue-900">
+                  <span>Kelayakan Manuver Armada:</span>
+                  <span class="px-2 py-0.5 rounded ${isArteri ? 'bg-blue-700 text-white' : 'bg-emerald-600 text-white'} text-[10px] font-black">
+                    ${isArteri ? 'SANGAT LAYAK (ARTERY)' : 'LAYAK (ARMROLL 6-8 m³)'}
+                  </span>
+                </div>
+                <div class="text-[11px] text-blue-900/85 leading-relaxed">
+                  <b>Standar Teknis:</b> Memenuhi syarat lebar badan jalan ≥ 4–6 meter & daya dukung perkerasan untuk manuver truk armroll kontainer dan truk compactor dinas.
+                </div>
+              </div>
+
+              <div class="space-y-1 text-[10.5px] text-slate-600 border-t pt-2">
+                <div><b>Fungsi dalam Sistem SDSS:</b> Menjadi koridor target perhitungan jarak kedekatan (Aksesibilitas Jalan) bagi 276 desa di Banjarnegara.</div>
+                <div class="text-[10px] text-slate-400 italic">Dasar Regulasi: SNI 19-3241-1994 & Permen PU 03/2013 (Tata Cara Pengelolaan Sampah Perkotaan).</div>
+              </div>
+            </div>
+            `
+          )
+          .addTo(map);
+        return;
+      }
+
+      // 3c. Popup: Pola Ruang RTRW
       if (topFeat.layer.id === 'layer-pola-ruang-fill') {
         const zonaName = p.NAMOBJ || 'Kawasan Budidaya';
         const isLindung = p.Status === 'Lindung' || zonaName.toLowerCase().includes('lindung') || zonaName.toLowerCase().includes('cagar') || zonaName.toLowerCase().includes('air');
@@ -847,8 +935,33 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         }
       }
 
+      // Compute instantaneous point-to-road distance from exact click coordinates (tapak)
+      let pointRoadDist = p.nearestRoadDistanceM;
+      if (roadsIndexRef.current.length > 0) {
+        const clickPt = turf.point([e.lngLat.lng, e.lngLat.lat]);
+        const [cLng, cLat] = [e.lngLat.lng, e.lngLat.lat];
+        let minDist = 99999;
+        const searchRadii = [0.003, 0.01, 0.03, 0.08]; // ~300m, ~1km, ~3km, ~8km
+        for (const r of searchRadii) {
+          const box = [cLng - r, cLat - r, cLng + r, cLat + r];
+          for (const rd of roadsIndexRef.current) {
+            if (rd.bbox[2] < box[0] || rd.bbox[0] > box[2] || rd.bbox[3] < box[1] || rd.bbox[1] > box[3]) continue;
+            const d = turf.pointToLineDistance(clickPt, rd.line, { units: 'meters' });
+            if (d < minDist) minDist = d;
+          }
+          if (minDist < (r * 111000 * 0.8)) break;
+        }
+        if (minDist < 99999) {
+          pointRoadDist = Math.max(5, Math.round(minDist));
+        }
+      }
+
+      const cleanSlopeCat = (p.slopeCategory || '')
+        .replace(/\s*\(.*?\)/g, '')
+        .trim() || 'Datar';
+
       const html = `
-        <div class="p-3 space-y-2.5 text-xs text-slate-800 max-w-xs font-sans">
+        <div class="p-3.5 space-y-2.5 text-xs text-slate-800 w-[305px] font-sans">
           <!-- Header -->
           <div class="border-b pb-2">
             <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
@@ -863,13 +976,13 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           </div>
 
           <!-- Score Badge -->
-          <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50/90 border border-slate-200/80">
             <div>
-              <span class="text-[10px] text-slate-500 block">Kategori Kesesuaian</span>
+              <span class="text-[10px] text-slate-500 block font-medium">Kategori Kesesuaian</span>
               <span class="font-bold text-xs" style="color: ${catColor}">${p.category}</span>
             </div>
             <div class="text-right">
-              <span class="text-[10px] text-slate-500 block">Skor WLC</span>
+              <span class="text-[10px] text-slate-500 block font-medium">Skor WLC</span>
               <span class="text-base font-black font-mono" style="color: ${catColor}">${p.score}/100</span>
             </div>
           </div>
@@ -887,41 +1000,65 @@ export const MapContainer: React.FC<MapContainerProps> = ({
               : ''
           }
 
-          <!-- Attributes Grid -->
-          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
-            <div class="bg-slate-50 p-1.5 rounded">
-              <span class="text-slate-500 text-[10px] block">Populasi Base (${formatNumber(p.populationBase)} jiwa)</span>
-              <span class="font-bold text-slate-800">${formatNumber(p.populationProjected)} jiwa (Pt)</span>
+          <!-- Attributes Grid (2x2 Balanced Cards) -->
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-slate-50/90 p-2 rounded-lg border border-slate-200/70 flex flex-col justify-between">
+              <span class="text-slate-500 text-[10px] block font-medium">Proyeksi Penduduk</span>
+              <div class="font-black text-slate-900 text-xs mt-1">${formatNumber(p.populationProjected)} jiwa</div>
+              <span class="text-[9.5px] text-slate-400 block mt-0.5">Base: ${formatNumber(p.populationBase)}</span>
             </div>
-            <div class="bg-slate-50 p-1.5 rounded">
-              <span class="text-slate-500 text-[10px] block">Estimasi Sampah</span>
-              <span class="font-bold text-amber-700">${formatVolume(p.wasteGenerationDailyM3)}/hari</span>
+
+            <div class="bg-slate-50/90 p-2 rounded-lg border border-slate-200/70 flex flex-col justify-between">
+              <span class="text-slate-500 text-[10px] block font-medium">Timbulan Sampah</span>
+              <div class="font-black text-amber-700 text-xs mt-1">${formatVolume(p.wasteGenerationDailyM3)}/hari</div>
+              <span class="text-[9.5px] text-slate-400 block mt-0.5">SNI 19-3983-1995</span>
             </div>
-            <div class="bg-slate-50 p-1.5 rounded">
-              <span class="text-slate-500 text-[10px] block">Akses Jalan</span>
-              <span class="font-semibold text-slate-800">${p.nearestRoadDistanceM} m</span>
+
+            <div class="bg-slate-50/90 p-2 rounded-lg border border-slate-200/70 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-slate-500 text-[10px]">
+                <span class="font-medium">Jalur Truk</span>
+                <span class="text-[8.5px] text-blue-700 font-bold bg-blue-50 px-1 py-0.2 rounded border border-blue-100">Tapak</span>
+              </div>
+              <div class="flex items-center justify-between mt-1">
+                <span class="font-black text-slate-900 text-xs">${pointRoadDist} m</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                  pointRoadDist <= 200
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : pointRoadDist <= 500
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-amber-100 text-amber-800'
+                }">
+                  ${pointRoadDist <= 200 ? 'Sangat Layak' : pointRoadDist <= 500 ? 'Layak' : 'Terbatas'}
+                </span>
+              </div>
             </div>
-            <div class="bg-slate-50 p-1.5 rounded">
-              <span class="text-slate-500 text-[10px] block">Kemiringan Lereng</span>
-              <span class="font-semibold text-slate-800">${p.slopePercent}% (${p.slopeCategory})</span>
+
+            <div class="bg-slate-50/90 p-2 rounded-lg border border-slate-200/70 flex flex-col justify-between">
+              <span class="text-slate-500 text-[10px] block font-medium">Kemiringan Lereng</span>
+              <div class="flex items-center justify-between mt-1">
+                <span class="font-black text-slate-900 text-xs">${p.slopePercent}%</span>
+                <span class="text-[9px] font-semibold text-slate-600 bg-slate-200/70 px-1.5 py-0.5 rounded">
+                  ${cleanSlopeCat}
+                </span>
+              </div>
             </div>
           </div>
 
           <!-- Zoning & Hazard Indicators -->
-          <div class="border-t pt-2 space-y-1.5 text-[10.5px]">
-            <div class="flex items-center justify-between text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-200/70">
+          <div class="border-t border-slate-200/80 pt-2 space-y-1.5 text-[10.5px]">
+            <div class="flex items-center justify-between text-slate-700 bg-slate-50/90 px-2.5 py-1.5 rounded-lg border border-slate-200/70">
               <span class="text-slate-500 font-medium">Zonasi RTRW:</span>
               <span class="font-bold text-slate-800 text-right truncate max-w-[170px]" title="${p.spatialPlanningStatus}">${p.spatialPlanningStatus}</span>
             </div>
             
             <div class="grid grid-cols-2 gap-1.5">
-              <div class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 border border-slate-200/70">
+              <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50/90 border border-slate-200/70">
                 <span class="text-slate-500">Longsor:</span>
                 <span class="font-bold ${p.landslideRiskLevel === 'Tinggi' ? 'text-rose-600' : p.landslideRiskLevel === 'Sedang' ? 'text-amber-600' : 'text-emerald-600'}">
                   ${p.landslideRiskLevel}
                 </span>
               </div>
-              <div class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 border border-slate-200/70">
+              <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50/90 border border-slate-200/70">
                 <span class="text-slate-500">Banjir:</span>
                 <span class="font-bold ${p.floodRiskLevel === 'Tinggi' ? 'text-rose-600' : p.floodRiskLevel === 'Sedang' ? 'text-amber-600' : 'text-emerald-600'}">
                   ${p.floodRiskLevel}
@@ -933,7 +1070,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       `;
 
       if (popupRef.current) popupRef.current.remove();
-      popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '320px' })
+      popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '340px' })
         .setLngLat(e.lngLat)
         .setHTML(html)
         .addTo(map);
@@ -948,6 +1085,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     map.on('mouseleave', 'layer-suitability-fill', unsetPointer);
     map.on('mouseenter', 'layer-tps-points', setPointer);
     map.on('mouseleave', 'layer-tps-points', unsetPointer);
+    map.on('mouseenter', 'layer-jalan-line', setPointer);
+    map.on('mouseleave', 'layer-jalan-line', unsetPointer);
 
     return () => {
       map.off('click', handleMapClick);
@@ -955,6 +1094,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       map.off('mouseleave', 'layer-suitability-fill', unsetPointer);
       map.off('mouseenter', 'layer-tps-points', setPointer);
       map.off('mouseleave', 'layer-tps-points', unsetPointer);
+      map.off('mouseenter', 'layer-jalan-line', setPointer);
+      map.off('mouseleave', 'layer-jalan-line', unsetPointer);
     };
   }, [mapLoaded]);
 
