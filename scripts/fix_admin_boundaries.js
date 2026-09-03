@@ -175,6 +175,13 @@ uniqueKecs.forEach(kecName => {
     merged = turf.union(turf.featureCollection([merged, matchingDesas[i]]));
   }
   
+  // Strip interior sliver holes/donut rings created by union
+  if (merged.geometry.type === 'Polygon') {
+    merged.geometry.coordinates = [merged.geometry.coordinates[0]];
+  } else if (merged.geometry.type === 'MultiPolygon') {
+    merged.geometry.coordinates = merged.geometry.coordinates.map(p => [p[0]]);
+  }
+
   // Set properties
   merged.properties = {
     KECAMATAN: kecName,
