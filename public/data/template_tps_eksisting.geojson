@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "name": "template_tps_eksisting",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nama_tps": "TPS Pasar Banjarnegara",
+        "kecamatan": "Banjarnegara",
+        "desa": "Kutabanjarnegara",
+        "status": "Aktif",
+        "kapasitas_m3": 12,
+        "keterangan": "TPS Kontainer Pasar"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [109.697415, -7.398512]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nama_tps": "TPS Karangkobar 1",
+        "kecamatan": "Karangkobar",
+        "desa": "Karangkobar",
+        "status": "Aktif",
+        "kapasitas_m3": 6,
+        "keterangan": "TPS Pemukiman"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [109.71253, -7.283145]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nama_tps": "TPS Mandiraja Wetan",
+        "kecamatan": "Mandiraja",
+        "desa": "Mandiraja Wetan",
+        "status": "Perlu Evaluasi",
+        "kapasitas_m3": 8,
+        "keterangan": "Dekat saluran air"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [109.5124, -7.46892]
+      }
+    }
+  ]
+}
