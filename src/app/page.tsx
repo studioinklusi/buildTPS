@@ -8,6 +8,7 @@ import { KpiBar } from '@/components/kpi/KpiBar';
 import { HelpAndFormulasModal } from '@/components/modal/HelpAndFormulasModal';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { DEFAULT_LAYER_VISIBILITY } from '@/lib/constants';
+import { LayerVisibilityState } from '@/types';
 import { Loader2, PanelLeft } from 'lucide-react';
 
 export default function Home() {
