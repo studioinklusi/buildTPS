@@ -849,9 +849,27 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             </div>
           </div>
 
-          <div class="text-[10px] text-slate-500 border-t pt-1.5 flex justify-between">
-            <span>RTRW: <b>${p.spatialPlanningStatus}</b></span>
-            <span>Longsor: <b>${p.landslideRiskLevel}</b></span>
+          <!-- Zoning & Hazard Indicators -->
+          <div class="border-t pt-2 space-y-1.5 text-[10.5px]">
+            <div class="flex items-center justify-between text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-200/70">
+              <span class="text-slate-500 font-medium">Zonasi RTRW:</span>
+              <span class="font-bold text-slate-800 text-right truncate max-w-[170px]" title="${p.spatialPlanningStatus}">${p.spatialPlanningStatus}</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 border border-slate-200/70">
+                <span class="text-slate-500">Longsor:</span>
+                <span class="font-bold ${p.landslideRiskLevel === 'Tinggi' ? 'text-rose-600' : p.landslideRiskLevel === 'Sedang' ? 'text-amber-600' : 'text-emerald-600'}">
+                  ${p.landslideRiskLevel}
+                </span>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 rounded bg-slate-50 border border-slate-200/70">
+                <span class="text-slate-500">Banjir:</span>
+                <span class="font-bold ${p.floodRiskLevel === 'Tinggi' ? 'text-blue-700' : p.floodRiskLevel === 'Sedang' ? 'text-blue-500' : 'text-emerald-600'}">
+                  ${p.floodRiskLevel}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       `;
